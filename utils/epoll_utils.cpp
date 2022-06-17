@@ -22,18 +22,14 @@ bool epoll_utils::epoll_init() {
 }
 
 
-bool epoll_utils::epoll_register(fun_conditions conditions, fun_poccess poccess) {
-    poccess_map.insert(std::pair<fun_conditions, fun_poccess>(conditions, poccess));
-}
-
-
-bool epoll_utils::epoll_wait_notify() {
+bool epoll_utils::epoll_poccess(fun_poccess poccess) {
     while (true) {
         int nfds = epoll_wait(epfd, events, EVENT_SIZE, 5);
         for (int i = 0; i < nfds; i++) {
-            for (auto &item: poccess_map) {
-                if (item.first(events[i])) item.second(events[i].data.fd);
-            }
+            poccess(events[i]);
         }
     }
+    return true;
 }
+
+

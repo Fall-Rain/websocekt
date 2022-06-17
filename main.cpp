@@ -28,8 +28,23 @@
 //        }
 //    }
 //}
+int server_socket;
+
+void poccess(epoll_event event) {
+    if (event.data.fd == server_socket) { //判断是否为连接服务端的socket，接受连接并将其加载到epoll里
+        struct sockaddr_in client_addr;
+        socklen_t client_len = sizeof(client_addr);
+        int conn = accept(server_socket, (struct sockaddr *) &client_addr, &client_len);
+        epoll_utils::epoll_add(conn, EPOLLIN);
+    } else if (event.events & EPOLLIN) { //当有socket的数据来临时，读取请求头，创建应答头，并返回给客户端
+        int conn = event.data.fd;
+        socket_utils::handshake(conn);
+    }
+}
 
 int main() {
-    int server_socket = socket_utils::start_socket(8090);
+    server_socket = socket_utils::start_socket(8090);
     epoll_utils::epoll_init();
+    epoll_utils::epoll_add(server_socket, EPOLLIN);
+    epoll_utils::epoll_poccess(poccess);
 }

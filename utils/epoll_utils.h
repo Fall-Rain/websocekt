@@ -16,11 +16,8 @@ private:
     static epoll_event events[EVENT_SIZE]; //定义epoll信息
     static int epfd;
 
-    typedef bool (*fun_conditions)(epoll_event event);
+    typedef void (*fun_poccess)(epoll_event event);
 
-    typedef void (*fun_poccess)(int conn);
-
-    static std::map<fun_conditions,fun_poccess> poccess_map;
 public:
 
     static bool
@@ -33,10 +30,7 @@ public:
     epoll_init();
 
     static bool
-    epoll_register(fun_conditions conditions,fun_poccess poccess);
-
-    static bool
-    epoll_wait_notify();
+    epoll_poccess(fun_poccess poccess);
 };
 
 
