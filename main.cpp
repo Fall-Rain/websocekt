@@ -1,11 +1,12 @@
-#include "utils/socket_utils.h"
-#include "utils/utils.h"
-#include "utils/epoll_utils.h"
+#include "utils/socket.h"
+#include "utils/code.h"
+#include "utils/epoll.h"
 
 #define EVENT_SIZE 10
+int server_socket;
 
 //int main() {
-//    int server_socket = socket_utils::start_socket(8091); //构造socket
+//    int server_socket = utils::socket::start_socket(8091); //构造socket
 //    struct _event event, events[EVENT_SIZE]; //定义epoll信息
 //    int epfd = epoll_create(10); //创建epoll数组
 //    event.data.fd = server_socket;
@@ -28,23 +29,22 @@
 //        }
 //    }
 //}
-int server_socket;
 
 void poccess(epoll_event event) {
-    if (event.data.fd == server_socket) { //判断是否为连接服务端的socket，接受连接并将其加载到epoll里
+    if (event.data.fd == utils::socket::getServerSocket()) { //判断是否为连接服务端的socket，接受连接并将其加载到epoll里
         struct sockaddr_in client_addr;
         socklen_t client_len = sizeof(client_addr);
         int conn = accept(server_socket, (struct sockaddr *) &client_addr, &client_len);
-        epoll_utils::epoll_add(conn, EPOLLIN);
+        utils::epoll::epoll_add(conn, EPOLLIN);
     } else if (event.events & EPOLLIN) { //当有socket的数据来临时，读取请求头，创建应答头，并返回给客户端
         int conn = event.data.fd;
-        socket_utils::handshake(conn);
+        utils::socket::handshake(conn);
+        utils::epoll::epoll_delete(conn);
     }
 }
 
 int main() {
-    server_socket = socket_utils::start_socket(8090);
-    epoll_utils::epoll_init();
-    epoll_utils::epoll_add(server_socket, EPOLLIN);
-    epoll_utils::epoll_poccess(poccess);
+    utils::epoll::epoll_init();
+    utils::socket::start_socket(8090);
+    utils::epoll::epoll_poccess(poccess);
 }

@@ -2,17 +2,19 @@
 // Created by yunling on 2022/6/14.
 //
 
-#include "socket_utils.h"
-#include "utils.h"
+#include "socket.h"
 
-int socket_utils::start_socket(int port) {
-    int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+int utils::socket::_server_socket = 0;
+
+bool utils::socket::start_socket(int port) {
+    _server_socket = ::socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in server_addr;
 
-    int oldSocketFlag = fcntl(server_socket, F_GETFL, 0);
+    int oldSocketFlag = fcntl(_server_socket, F_GETFL, 0);
     int newSocketFlag = oldSocketFlag | O_NONBLOCK;
-    if (fcntl(server_socket, F_SETFL, newSocketFlag) == -1) {
-        close(server_socket);
+    if (fcntl(_server_socket, F_SETFL, newSocketFlag) == -1) {
+        close(_server_socket);
         std::cout << "非阻塞失败" << std::endl;
         exit(0);
     }
@@ -20,22 +22,22 @@ int socket_utils::start_socket(int port) {
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(port);
-
-    std::cout << "bind：" << bind(server_socket, (struct sockaddr *) &server_addr, server_len) << std::endl;
-    std::cout << "listen：" << listen(server_socket, 5) << std::endl;
-    return server_socket;
+    std::cout << "bind：" << bind(_server_socket, (struct sockaddr *) &server_addr, server_len) << std::endl;
+    std::cout << "listen：" << listen(_server_socket, 5) << std::endl;
+    epoll::epoll_add(_server_socket, EPOLLIN);
+    return true;
 }
 
-bool socket_utils::handshake(int conn) {
+bool utils::socket::handshake(int conn) {
     char buffer[BUF_SIZE];
     memset(buffer, 0, sizeof(buffer));
     read(conn, buffer, BUF_SIZE);
     std::cout << buffer << std::endl;
-    auto bufflist = utils::split(buffer, "\r\n");
-    std::map<std::string, std::string> map = utils::split(bufflist.begin() + 1, bufflist.end(), ":");
+    std::map<std::string, std::string> map;
+    utils::code::decode_accept(buffer, &map);
     std::string key = map.find("Sec-WebSocket-Key")->second + MAGIC_KEY;
     std::string sec_websocket_accept;
-    utils::encode(&map.find("Sec-WebSocket-Key")->second, &sec_websocket_accept);
+    utils::code::encode_accept(&map.find("Sec-WebSocket-Key")->second, &sec_websocket_accept);
     std::string buff =
             "HTTP/1.1 101 Switching Protocols\r\n"
             "Upgrade: websocket\r\n"
@@ -43,4 +45,8 @@ bool socket_utils::handshake(int conn) {
             "Sec-WebSocket-Accept: " + sec_websocket_accept + "\r\n\r\n";
     write(conn, buff.c_str(), buff.length());
     return true;
+}
+
+int utils::socket::getServerSocket() {
+    return _server_socket;
 }
