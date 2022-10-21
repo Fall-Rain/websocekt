@@ -26,14 +26,17 @@ bool Socket::start_socket(int port) {
     return true;
 }
 
-bool Socket::handshake(int conn) {
+bool Socket::handshake(epoll_event event) {
+    struct sockaddr_in client_addr;
+    socklen_t client_len = sizeof(client_addr);
+    int conn = accept(this->_server_socket, (struct sockaddr *) &client_addr, &client_len);
     char buffer[BUF_SIZE];
     memset(buffer, 0, sizeof(buffer));
     read(conn, buffer, BUF_SIZE);
-    std::cout << buffer << std::endl;
+//    std::cout << buffer << std::endl;
     std::map<std::string, std::string> map;
     utils::code::decode_accept(buffer, &map);
-    std::string key = map.find("Sec-WebSocket-Key")->second + MAGIC_KEY;
+//    std::string key = map.find("Sec-WebSocket-Key")->second + MAGIC_KEY;
     std::string sec_websocket_accept;
     utils::code::encode_accept(&map.find("Sec-WebSocket-Key")->second, &sec_websocket_accept);
     std::string buff =
@@ -46,14 +49,14 @@ bool Socket::handshake(int conn) {
     return true;
 }
 
+bool Socket::interception(fun_poccess poccess) {
+    this->poccess.push_back(poccess);
+    return true;
+}
+
 Socket::Socket() {
     this->epfd = epoll_create(10);
     this->events = new epoll_event[EVENT_SIZE];
-}
-
-bool Socket::interception(fun_poccess poccess) {
-    this->poccess = poccess;
-    return true;
 }
 
 
@@ -69,21 +72,18 @@ int Socket::Accept() {
         }
         for (int i = 0; i < nfds; i++) {
             if (this->events[i].data.fd == this->_server_socket) {
-                struct sockaddr_in client_addr;
-                socklen_t client_len = sizeof(client_addr);
-                int conn = accept(this->_server_socket, (struct sockaddr *) &client_addr, &client_len);
-                handshake(conn);
-            } else if (events[i].events & EPOLLIN) {
-                poccess(events[i].data.fd);
-//                return events[i].data.fd;
-//                int conn = events[i].data.fd;
-//                char buffer[BUF_SIZE];
-//                memset(buffer, 0, sizeof(buffer));
-//                read(conn, buffer, BUF_SIZE);
-//                std::cout << buffer << std::endl;
-//                close(conn);
+                handshake(events[i]);
+            } else {
+                for (const auto &item: poccess)
+                    item(events[i]);
             }
         }
     }
     return 0;
+}
+
+
+void Socket::Close(int conn) {
+    epoll::epoll_delete(this->epfd, conn);
+    close(conn);
 }

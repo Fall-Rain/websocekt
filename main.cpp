@@ -4,19 +4,26 @@
 
 #define EVENT_SIZE 10
 int server_socket;
+Socket *sock;
 
-void poccess(int conn) {
+
+bool poccess(epoll_event event) {
+    if (!event.events & EPOLLIN) {
+        return true;
+    }
     unsigned int bytes[16];
     char buffer[BUF_SIZE];
     memset(buffer, 0, sizeof(buffer));
-    read(conn, buffer, BUF_SIZE);
+    read(event.data.fd, buffer, BUF_SIZE);
     std::cout << buffer << std::endl;
+    sock->Close(event.data.fd);
+    return true;
 //    write(conn, buffer, BUF_SIZE);
 //    close(conn);
 }
 
 int main() {
-    Socket *sock = new Socket();
+    sock = new Socket();
     sock->interception(poccess);
     sock->start_socket(8090);
 }

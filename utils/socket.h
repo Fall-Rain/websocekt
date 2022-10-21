@@ -22,9 +22,9 @@
 
 class Socket {
 private:
-    typedef void (*fun_poccess)(int conn);
+    typedef bool (*fun_poccess)(epoll_event event);
 
-    fun_poccess poccess;
+    std::vector<fun_poccess> poccess;
 
     int _server_socket;
 
@@ -38,9 +38,11 @@ public:
 
     bool start_socket(int port);
 
-    bool handshake(int conn);
+    bool handshake(epoll_event event);
 
     int Accept();
+
+    void Close(int conn);
 };
 
 
