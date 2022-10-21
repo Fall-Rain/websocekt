@@ -19,18 +19,29 @@
 #include "epoll.h"
 
 #define BUF_SIZE 4096
-namespace utils {
-    class socket {
-    private:
-        static int _server_socket;
-    public:
-        static bool start_socket(int port);
 
-        static bool handshake(int conn);
+class Socket {
+private:
+    typedef void (*fun_poccess)(int conn);
 
-        static int getServerSocket();
-    };
-}
+    fun_poccess poccess;
+
+    int _server_socket;
+
+    epoll_event *events; //定义epoll信息
+    int epfd;
+public:
+    Socket();
+
+    bool
+    interception(fun_poccess poccess);
+
+    bool start_socket(int port);
+
+    bool handshake(int conn);
+
+    int Accept();
+};
 
 
 #endif //WEBSOCKET_SOCKET_H

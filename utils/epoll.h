@@ -10,29 +10,15 @@
 #include "map"
 
 #define EVENT_SIZE 10
-namespace utils {
-    class epoll {
-    private:
-        static epoll_event *_events; //定义epoll信息
-        static int _epfd;
 
-        typedef void (*fun_poccess)(epoll_event event);
+class epoll {
+public:
+    static bool
+    epoll_add(int epfd, int conn, uint32_t events);
 
-    public:
-
-        static bool
-        epoll_add(int conn, uint32_t events);
-
-        static bool
-        epoll_delete(int conn);
-
-        static bool
-        epoll_init();
-
-        static bool
-        epoll_poccess(fun_poccess poccess);
-    };
-}
+    static bool
+    epoll_delete(int epfd, int conn);
+};
 
 
 #endif //WEBSOCKET_EPOLL_H
