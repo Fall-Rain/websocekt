@@ -45,6 +45,9 @@ bool Socket::handshake(epoll_event event) {
             "Connection: Upgrade\r\n"
             "Sec-WebSocket-Accept: " + sec_websocket_accept + "\r\n\r\n";
     write(conn, buff.c_str(), buff.length());
+    std::string message;
+    utils::code::encode_message("你好,欢迎登录", message);
+    Socket::Write(conn, message);
     epoll::epoll_add(this->epfd, conn, EPOLLIN);
     return true;
 }
@@ -86,4 +89,16 @@ int Socket::Accept() {
 void Socket::Close(int conn) {
     epoll::epoll_delete(this->epfd, conn);
     close(conn);
+}
+
+std::string Socket::Read(int fd) {
+    char buffer[BUF_SIZE];
+    memset(buffer, 0, sizeof(buffer));
+    read(fd, buffer, BUF_SIZE);
+    return buffer;
+}
+
+bool Socket::Write(int fd, std::string message) {
+    write(fd, message.c_str(), message.size());
+    return true;
 }

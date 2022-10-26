@@ -31,8 +31,8 @@ namespace utils {
         static bool
         decode_accept(std::string input, std::map<std::string, std::string> *map);
 
-        static bool
-        encode_message();
+        static int
+        encode_message(std::string in_messaage, std::string &out_message);
 
         static int
         decode_message(std::string in_messaage, std::string &out_messsage);

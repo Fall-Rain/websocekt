@@ -11,12 +11,9 @@ bool poccess(epoll_event event) {
     if (!event.events & EPOLLIN) {
         return true;
     }
-    unsigned int bytes[16];
-    char buffer[BUF_SIZE];
-    memset(buffer, 0, sizeof(buffer));
-    read(event.data.fd, buffer, BUF_SIZE);
-    std::string result;
-    int ret = utils::code::decode_message(buffer, result);
+    std::string message = Socket::Read(event.data.fd);
+    std::string result, message1;
+    int ret = utils::code::decode_message(message.c_str(), result);
     if (ret == WS_ERROR_FRAME) {
         sock->Close(event.data.fd);
         return false;
@@ -25,11 +22,10 @@ bool poccess(epoll_event event) {
         sock->Close(event.data.fd);
         return true;
     }
+    utils::code::encode_message(result, message1);
+    Socket::Write(event.data.fd, message1);
     std::cout << result << std::endl;
-//    sock->Close(event.data.fd);
     return true;
-//    write(conn, buffer, BUF_SIZE);
-//    close(conn);
 }
 
 int main() {

@@ -109,6 +109,32 @@ int utils::code::decode_message(std::string in_messaage, std::string &out_messsa
 
 }
 
-bool utils::code::encode_message() {
+int utils::code::encode_message(std::string in_messaage, std::string &out_message) {
+    int ret = WS_EMPTY_FRAME;
+    const uint32_t message_length = in_messaage.size();
+    if (message_length > 32767) {
+        return WS_ERROR_FRAME;
+    }
+    uint8_t payload_fiel_extr_bytes = (message_length <= 0x7d) ? 0 : 2;
+    uint8_t frame_header_size = 2 + payload_fiel_extr_bytes;
+    uint8_t *frame_header = new uint8_t[frame_header_size];
+    memset(frame_header, 0, frame_header_size);
+    frame_header[0] = static_cast<uint8_t >(0x80 | WS_TEXT_FRAME);
+    // 填充数据长度
+    if (message_length <= 0x7d) {
+        frame_header[1] = static_cast<uint8_t>(message_length);
+    } else {
+        frame_header[1] = 0x7e;
+        uint16_t len = htons(message_length);
+        memcpy(&frame_header[2], &len, payload_fiel_extr_bytes);
+    }
+
+    // 填充数据
+    uint32_t frameSize = frame_header_size + message_length;
+    char *frame = new char[frameSize + 1];
+    memcpy(frame, frame_header, frame_header_size);
+    memcpy(frame + frame_header_size, in_messaage.c_str(), message_length);
+    frame[frameSize] = '\0';
+    out_message = frame;
     return true;
 }

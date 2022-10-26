@@ -42,7 +42,14 @@ public:
 
     int Accept();
 
+
     void Close(int conn);
+
+    static
+    bool Write(int fd, std::string message);
+
+    static
+    std::string Read(int fd);
 };
 
 
