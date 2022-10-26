@@ -34,7 +34,7 @@ utils::code::decode_accept(std::string input, std::map<std::string, std::string>
     return true;
 }
 
-bool utils::code::decode_message(std::string in_messaage, std::string &out_messsage) {
+int utils::code::decode_message(std::string in_messaage, std::string &out_messsage) {
     int ret = WS_OPENING_FRAME;
     const char *frameData = in_messaage.c_str();
     const int frameLength = in_messaage.size();

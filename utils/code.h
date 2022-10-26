@@ -34,7 +34,7 @@ namespace utils {
         static bool
         encode_message();
 
-        static bool
+        static int
         decode_message(std::string in_messaage, std::string &out_messsage);
     };
 };
