@@ -32,7 +32,7 @@ namespace utils {
         decode_accept(std::string input, std::map<std::string, std::string> *map);
 
         static int
-        encode_message(std::string in_messaage, std::string &out_message);
+        encode_message(std::string in_messaage, std::string &out_message, uint8_t frameType);
 
         static int
         decode_message(std::string in_messaage, std::string &out_messsage);

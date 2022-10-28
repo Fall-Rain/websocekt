@@ -46,7 +46,9 @@ bool Socket::handshake(epoll_event event) {
             "Sec-WebSocket-Accept: " + sec_websocket_accept + "\r\n\r\n";
     write(conn, buff.c_str(), buff.length());
     std::string message;
-    utils::code::encode_message("你好,欢迎登录", message);
+//    utils::code::encode_message("", message, WS_PING_FRAME);
+//    Socket::Write(conn, message);
+    utils::code::encode_message("你好,欢迎登录", message, WS_TEXT_FRAME);
     Socket::Write(conn, message);
     epoll::epoll_add(this->epfd, conn, EPOLLIN);
     return true;
