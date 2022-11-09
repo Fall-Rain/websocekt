@@ -33,10 +33,8 @@ bool Socket::handshake(epoll_event event) {
     char buffer[BUF_SIZE];
     memset(buffer, 0, sizeof(buffer));
     read(conn, buffer, BUF_SIZE);
-//    std::cout << buffer << std::endl;
     std::map<std::string, std::string> map;
     utils::code::decode_accept(buffer, &map);
-//    std::string key = map.find("Sec-WebSocket-Key")->second + MAGIC_KEY;
     std::string sec_websocket_accept;
     utils::code::encode_accept(&map.find("Sec-WebSocket-Key")->second, &sec_websocket_accept);
     std::string buff =
@@ -46,8 +44,6 @@ bool Socket::handshake(epoll_event event) {
             "Sec-WebSocket-Accept: " + sec_websocket_accept + "\r\n\r\n";
     write(conn, buff.c_str(), buff.length());
     std::string message;
-//    utils::code::encode_message("", message, WS_PING_FRAME);
-//    Socket::Write(conn, message);
     utils::code::encode_message("你好,欢迎登录", message, WS_TEXT_FRAME);
     Socket::Write(conn, message);
     epoll::epoll_add(this->epfd, conn, EPOLLIN);

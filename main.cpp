@@ -18,8 +18,6 @@ bool poccess(epoll_event event) {
         case WS_OPENING_FRAME:
             std::cout << message << std::endl;
             utils::code::encode_message(message, socket_message, WS_TEXT_FRAME);
-//            Socket::Write(event.data.fd, socket_message);
-//            std::cout << message << std::endl;
             break;
         case WS_ERROR_FRAME:
             sock->Close(event.data.fd);
@@ -34,6 +32,8 @@ bool poccess(epoll_event event) {
         case WS_PONG_FRAME:
             utils::code::encode_message("", socket_message, WS_PING_FRAME);
             std::cout << "pong" << std::endl;
+            break;
+        case WS_BINARY_FRAME:
             break;
     }
     Socket::Write(event.data.fd, socket_message);
