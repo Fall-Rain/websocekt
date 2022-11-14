@@ -84,53 +84,9 @@ int utils::code::decode_message(std::string in_messaage, std::string &out_messsa
         }
         out_messsage = payloadData;
         delete[] payloadData;
-        return WS_OPENING_FRAME;
+        return WS_TEXT_FRAME;
     }
     return opcode;
-//    switch (opcode) {
-//        case WS_TEXT_FRAME: {
-//            payloadLength = static_cast<uint8_t >(in_messaage[1] & 0x7f);
-//            if (payloadLength == 0x7e) {
-//                uint16_t payloadLength16b = 0;
-//                payloadFieldExtraBytes = 2;
-//                memcpy(&payloadLength16b, &frameData[2], payloadFieldExtraBytes);
-//                payloadLength = ntohs(payloadLength16b);
-//            } else if (payloadLength == 0x7f) {
-//                // 数据过长,暂不支持
-//                ret = WS_ERROR_FRAME;
-//            }
-//            break;
-//        }
-//        case WS_CLOSING_FRAME:
-//            return WS_CLOSING_FRAME;
-////            ret = WS_CLOSING_FRAME;
-////            break;
-//        case WS_BINARY_FRAME :
-//        case WS_PING_FRAME:
-//
-//        case WS_PONG_FRAME:
-//            //暂不处理
-//            break;
-//        default:
-//            ret = WS_ERROR_FRAME;
-//    }
-//
-//
-//    if ((ret != WS_ERROR_FRAME) && (payloadLength > 0)) {
-//        // header: 2字节, masking key: 4字节
-//        const char *maskingKey = &frameData[2 + payloadFieldExtraBytes];
-//        char *payloadData = new char[payloadLength + 1];
-//        memset(payloadData, 0, payloadLength + 1);
-//        memcpy(payloadData, &frameData[2 + payloadFieldExtraBytes + 4], payloadLength);
-//        for (int i = 0; i < payloadLength; i++) {
-//            payloadData[i] = payloadData[i] ^ maskingKey[i % 4];
-//        }
-//        out_messsage = payloadData;
-//        delete[] payloadData;
-//    }
-//
-//    return ret;
-
 }
 
 int utils::code::encode_message(std::string in_messaage, std::string &out_message, uint8_t frameType) {

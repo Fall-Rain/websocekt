@@ -22,16 +22,22 @@
 
 class Socket {
 private:
-    typedef bool (*fun_poccess)(epoll_event event);
+
+    typedef bool (*fun_poccess)(std::string message, int ret, int fd);
+
+    typedef bool (*fun_after_handshake)(int fd);
 
     std::vector<fun_poccess> poccess;
+    fun_after_handshake after_handshake;
 
     int _server_socket;
 
     epoll_event *events; //定义epoll信息
-    int epfd;
+    static int epfd;
 public:
     Socket();
+
+    bool set_after_handshake(fun_after_handshake poccess);
 
     bool
     interception(fun_poccess poccess);
@@ -42,7 +48,7 @@ public:
 
     int Accept();
 
-
+    static
     void Close(int conn);
 
     static

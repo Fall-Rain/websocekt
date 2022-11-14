@@ -3,46 +3,66 @@
 #include "utils/epoll.h"
 
 #define EVENT_SIZE 10
-int server_socket;
-Socket *sock;
 
 
-bool poccess(epoll_event event) {
-    if (!event.events & EPOLLIN) {
-        return true;
-    }
-    std::string socket_message = Socket::Read(event.data.fd);
+bool ws_binary_frame(std::string message, int ret, int fd) {
+    return true;
+}
+
+bool ws_pong_frame(std::string message, int ret, int fd) {
+    if (ret != WS_PONG_FRAME) return false;
+    std::string socket_message;
+    utils::code::encode_message("", socket_message, WS_PING_FRAME);
+    std::cout << "pong" << std::endl;
+    Socket::Write(fd, socket_message);
+    return true;
+}
+
+bool ws_ping_frame(std::string message, int ret, int fd) {
+    if (ret != WS_PING_FRAME) return false;
+    std::string socket_message;
+    utils::code::encode_message("", socket_message, WS_PONG_FRAME);
+    std::cout << "ping" << std::endl;
+    Socket::Write(fd, socket_message);
+    return true;
+}
+
+bool ws_closing_frame(std::string message, int ret, int fd) {
+    if (ret != WS_CLOSING_FRAME) return false;
+    Socket::Close(fd);
+    return true;
+}
+
+bool ws_error_frame(std::string message, int ret, int fd) {
+    if (ret != WS_ERROR_FRAME) return false;
+    Socket::Close(fd);
+    return true;
+}
+
+bool ws_text_frame(std::string message, int ret, int fd) {
+    if (ret != WS_TEXT_FRAME) return false;
+    std::cout << message << std::endl;
+    std::string socket_message;
+    utils::code::encode_message(message, socket_message, WS_TEXT_FRAME);
+    Socket::Write(fd, socket_message);
+    return true;
+}
+
+bool after_handshake(int fd) {
     std::string message;
-    int ret = utils::code::decode_message(socket_message.c_str(), message);
-    switch (ret) {
-        case WS_OPENING_FRAME:
-            std::cout << message << std::endl;
-            utils::code::encode_message(message, socket_message, WS_TEXT_FRAME);
-            break;
-        case WS_ERROR_FRAME:
-            sock->Close(event.data.fd);
-            return false;
-        case WS_CLOSING_FRAME:
-            sock->Close(event.data.fd);
-            return true;
-        case WS_PING_FRAME:
-            utils::code::encode_message("", socket_message, WS_PONG_FRAME);
-            std::cout << "ping" << std::endl;
-            break;
-        case WS_PONG_FRAME:
-            utils::code::encode_message("", socket_message, WS_PING_FRAME);
-            std::cout << "pong" << std::endl;
-            break;
-        case WS_BINARY_FRAME:
-            break;
-    }
-    Socket::Write(event.data.fd, socket_message);
+    utils::code::encode_message("你好,欢迎登录", message, WS_TEXT_FRAME);
+    Socket::Write(fd, message);
     return true;
 }
 
 int main() {
-    sock = new Socket();
-    sock->interception(poccess);
+    Socket *sock = new Socket();
+    sock->set_after_handshake(after_handshake);
+    sock->interception(ws_text_frame);
+    sock->interception(ws_error_frame);
+    sock->interception(ws_closing_frame);
+    sock->interception(ws_ping_frame);
+    sock->interception(ws_pong_frame);
+    sock->interception(ws_binary_frame);
     sock->start_socket(8090);
-//    uint8_t opcode = 0xA8 & 0x0f;
 }

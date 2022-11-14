@@ -8,5 +8,5 @@ find_package(OpenSSL REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 
-add_executable(websocket main.cpp utils/code.cpp utils/code.h utils/socket.cpp utils/socket.h utils/base64.cpp utils/base64.h utils/sha1.cpp utils/sha1.h utils/epoll.cpp utils/epoll.h)
+add_executable(websocket main.cpp utils/epoll.cpp utils/epoll.h utils/code.cpp utils/code.h utils/socket.cpp utils/socket.h utils/base64.cpp utils/base64.h utils/sha1.cpp utils/sha1.h)
 target_link_libraries(websocket Boost::regex OpenSSL::Crypto OpenSSL::SSL)

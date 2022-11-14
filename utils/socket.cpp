@@ -4,6 +4,7 @@
 
 #include "socket.h"
 
+int Socket::epfd = 0;
 
 bool Socket::start_socket(int port) {
     _server_socket = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -43,9 +44,7 @@ bool Socket::handshake(epoll_event event) {
             "Connection: Upgrade\r\n"
             "Sec-WebSocket-Accept: " + sec_websocket_accept + "\r\n\r\n";
     write(conn, buff.c_str(), buff.length());
-    std::string message;
-    utils::code::encode_message("你好,欢迎登录", message, WS_TEXT_FRAME);
-    Socket::Write(conn, message);
+    after_handshake(conn);
     epoll::epoll_add(this->epfd, conn, EPOLLIN);
     return true;
 }
@@ -75,8 +74,18 @@ int Socket::Accept() {
             if (this->events[i].data.fd == this->_server_socket) {
                 handshake(events[i]);
             } else {
-                for (const auto &item: poccess)
-                    item(events[i]);
+                switch (events[i].events) {
+                    case EPOLLIN:
+                        std::string socket_message = Socket::Read(events[i].data.fd);
+                        std::string message;
+                        int ret = utils::code::decode_message(socket_message.c_str(), message);
+                        for (const auto &item: poccess) {
+                            if (item(message, ret, events[i].data.fd)) break;
+                        }
+                        break;
+                }
+//                for (const auto &item: poccess)
+//                    item(events[i]);
             }
         }
     }
@@ -85,7 +94,7 @@ int Socket::Accept() {
 
 
 void Socket::Close(int conn) {
-    epoll::epoll_delete(this->epfd, conn);
+    epoll::epoll_delete(epfd, conn);
     close(conn);
 }
 
@@ -98,5 +107,10 @@ std::string Socket::Read(int fd) {
 
 bool Socket::Write(int fd, std::string message) {
     write(fd, message.c_str(), message.size());
+    return true;
+}
+
+bool Socket::set_after_handshake(Socket::fun_after_handshake poccess) {
+    this->after_handshake = poccess;
     return true;
 }
